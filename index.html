@@ -216,6 +216,58 @@ section h2 span{color:var(--orange);}
   .about{grid-template-columns:1fr;}
 }
 
+/* SLIDER */
+.slider {
+    position: relative;
+    width: 100%;
+    height: 220px;
+    overflow: hidden;
+}
+
+.slides {
+    display: flex;
+    height: 100%;
+    transition: transform 0.6s ease;
+}
+
+.slide {
+    min-width: 100%;
+    height: 100%;
+}
+
+.slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #fff;
+}
+
+.next-btn {
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  transform: translateY(-50%);
+  background: rgba(255, 122, 0, 0.8);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s;
+}
+
+.next-btn:hover {
+  background: var(--orange);
+}
+
+
+
 /* ================= EXPERTISE ================= */
 .expertise-card{
   background:var(--white);
@@ -598,13 +650,46 @@ footer{
   50%{transform:translateY(-6px);}
   100%{transform:translateY(0);}
 }
+
+/* TOAST NOTIFICATION */
+.toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    min-width: 280px;
+    max-width: 360px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #fff;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.35s ease;
+    z-index: 9999;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast.success {
+    background: linear-gradient(135deg, #28a745, #218838);
+}
+
+.toast.error {
+    background: linear-gradient(135deg, #dc3545, #b02a37);
+}
+
 </style>
 </head>
 
 <body>
 
 <header>
-  <div class="logo">VO<span>CO</span></div>
+  <div class="logo"><span>V</span>OCO</div>
   <div class="menu-toggle" onclick="toggleMenu()">
     <i class="fa-solid fa-bars"></i>
   </div>
@@ -640,8 +725,17 @@ footer{
 <section id="about">
   <h2>About <span>VOCO</span></h2>
   <div class="about">
-    <img src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7">
-    <p>
+    
+    <div class="slider">
+    <div class="slides">
+        <div class="slide"><img src="https://picsum.photos/800/500?random=21"></div>
+        <div class="slide"><img src="https://picsum.photos/800/500?random=22"></div>
+        <div class="slide"><img src="https://picsum.photos/800/500?random=23"></div>
+    </div>
+    <button class="next-btn">›</button>
+</div>
+
+    <p style="text-align: justify;">
       VOCO (Vocal for Local Commerce) is a platform designed to bring
       local businesses into the digital ecosystem. We provide visibility,
       technology, and support to help sellers grow sustainably.
@@ -735,10 +829,11 @@ footer{
       <p><strong>Phone:</strong> +91 9XXXXXXXXX</p>
       <p><strong>Location:</strong> India</p>
     </div>
-    <form class="contact-form">
-      <input type="text" placeholder="Your Name">
-      <input type="email" placeholder="Your Email">
-      <textarea rows="4" placeholder="Message"></textarea>
+    <form id="contact-form" class="contact-form">
+      <input type="text" name="name" placeholder="Your Name" required>
+      <input type="tel"  name="phone" placeholder="Contact Number" required>
+      <input type="email" name="email" placeholder="Your Email" required>
+      <textarea rows="4" name="message" placeholder="Message"></textarea>
       <button class="btn">Send</button>
     </form>
   </div>
@@ -791,6 +886,91 @@ document.addEventListener('mousemove', (e) => {
     const moveY = (y - 0.5) * (20 + index * 10);
     shape.style.transform = `translate(${moveX}px, ${moveY}px)`;
   });
+});
+</script>
+
+
+<!-- EmailJS Library -->
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+<!-- Your External JS File -->
+<script>
+    // Initialize EmailJS
+(function () {
+    emailjs.init("V_uftsdRQOQdfsLPe"); // Public Key from EmailJS  V_uftsdRQOQdfsLPe
+})();
+
+// Wait for DOM to load
+document.addEventListener("DOMContentLoaded", function () {
+
+    const form = document.getElementById("contact-form");
+
+    if (!form) return;
+
+    form.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        emailjs.sendForm(
+            "service_w6i67dr",   // EmailJS service ID
+            "template_dt0ux1g",  // EmailJS template ID
+            form
+        ).then(
+           function () {
+                showToast("✅ Message sent successfully! We will contact you soon.", "success");
+                form.reset();
+            },
+            function (error) {
+                showToast("❌ Failed to send message. Please try again.", "error");
+                console.error("EmailJS Error:", error);
+            }
+        );
+    });
+
+});
+
+</script>
+
+<!-- Toast Notification -->
+<div id="toast" class="toast"></div>
+
+<script>
+function showToast(message, type = "success") {
+    const toast = document.getElementById("toast");
+
+    toast.textContent = message;
+    toast.className = `toast show ${type}`;
+
+    setTimeout(() => {
+        toast.classList.remove("show");
+    }, 3000);
+}
+</script>
+
+
+<script>
+document.querySelectorAll(".slider").forEach(slider => {
+    const slides = slider.querySelector(".slides");
+    const slideItems = slider.querySelectorAll(".slide");
+    const nextBtn = slider.querySelector(".next-btn");
+
+    let index = 0;
+    const total = slideItems.length;
+
+    function showSlide(i) {
+        slides.style.transform = `translateX(-${i * 100}%)`;
+    }
+
+    function nextSlide() {
+        index = (index + 1) % total;
+        showSlide(index);
+    }
+
+    let autoSlide = setInterval(nextSlide, 5000);
+
+    nextBtn.addEventListener("click", () => {
+        clearInterval(autoSlide);
+        nextSlide();
+        autoSlide = setInterval(nextSlide, 5000);
+    });
 });
 </script>
 </body>
